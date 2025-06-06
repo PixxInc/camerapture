@@ -118,20 +118,26 @@ public abstract class ResizableDecorationEntity extends Entity {
 
         // Find the center of the top-left piece.
         Vec3d center = attachmentPos.toCenterPos();
-        center = center.subtract(new Vec3d(facing.getOffsetX(), 0, facing.getOffsetZ()).multiply(0.5 - THICKNESS / 2));
+        center = center.subtract(new Vec3d(facing.getOffsetX(), facing.getOffsetY(), facing.getOffsetZ()).multiply(0.5 - THICKNESS / 2));
 
         this.setPos(center.x, center.y, center.z);
 
         // Then, we expand into the full frame.
-        Direction parallel = facing.rotateYCounterclockwise();
-        if (facing.getAxis() == Direction.Axis.Z) {
-            Vec3d p1 = center.subtract(parallel.getOffsetX() * 0.5, 0.5, THICKNESS / 2);
-            Vec3d p2 = p1.add(parallel.getOffsetX() * getFrameWidth(), getFrameHeight(), THICKNESS);
+        if (facing.getAxis() == Direction.Axis.Y) {
+            Vec3d p1 = center.subtract(0.5, THICKNESS / 2, 0.5);
+            Vec3d p2 = p1.add(getFrameWidth(), THICKNESS, getFrameHeight());
             this.setBoundingBox(new Box(p1, p2));
         } else {
-            Vec3d p1 = center.subtract(THICKNESS / 2, 0.5, parallel.getOffsetZ() * 0.5);
-            Vec3d p2 = p1.add(THICKNESS, getFrameHeight(), parallel.getOffsetZ() * getFrameWidth());
-            this.setBoundingBox(new Box(p1, p2));
+            Direction parallel = facing.rotateYCounterclockwise();
+            if (facing.getAxis() == Direction.Axis.Z) {
+                Vec3d p1 = center.subtract(parallel.getOffsetX() * 0.5, 0.5, THICKNESS / 2);
+                Vec3d p2 = p1.add(parallel.getOffsetX() * getFrameWidth(), getFrameHeight(), THICKNESS);
+                this.setBoundingBox(new Box(p1, p2));
+            } else {
+                Vec3d p1 = center.subtract(THICKNESS / 2, 0.5, parallel.getOffsetZ() * 0.5);
+                Vec3d p2 = p1.add(THICKNESS, getFrameHeight(), parallel.getOffsetZ() * getFrameWidth());
+                this.setBoundingBox(new Box(p1, p2));
+            }
         }
 
         resetObstructionCheckCounter();
@@ -154,12 +160,20 @@ public abstract class ResizableDecorationEntity extends Entity {
             return false;
         } else {
             BlockPos blockPos = this.attachmentPos.offset(this.facing.getOpposite());
-            Direction direction = this.facing.rotateYCounterclockwise();
+            Direction widthDir;
+            Direction heightDir;
+            if (this.facing.getAxis() == Direction.Axis.Y) {
+                widthDir = Direction.EAST;
+                heightDir = Direction.SOUTH;
+            } else {
+                widthDir = this.facing.rotateYCounterclockwise();
+                heightDir = Direction.UP;
+            }
             BlockPos.Mutable mutable = new BlockPos.Mutable();
 
             for (int x = 0; x < this.getFrameWidth(); ++x) {
                 for (int y = 0; y < this.getFrameHeight(); ++y) {
-                    mutable.set(blockPos).move(direction, x).move(Direction.UP, y);
+                    mutable.set(blockPos).move(widthDir, x).move(heightDir, y);
                     BlockState blockState = this.getWorld().getBlockState(mutable);
 
                     //noinspection deprecation

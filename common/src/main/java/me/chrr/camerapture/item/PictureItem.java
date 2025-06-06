@@ -64,12 +64,13 @@ public class PictureItem extends Item {
         BlockPos pos = context.getBlockPos().offset(facing);
         ItemStack itemStack = context.getStack();
 
-        // Pictures can only be placed on walls.
-        if (facing.getAxis().isVertical() || !player.canPlaceOn(pos, facing, itemStack)) {
+        // Pictures must be placeable on the clicked surface
+        if (!player.canPlaceOn(pos, facing, itemStack)) {
             return ActionResult.PASS;
         }
 
         PictureFrameEntity pictureFrameEntity = new PictureFrameEntity(world, pos, facing);
+        pictureFrameEntity.setYaw(player.getYaw());
         if (!pictureFrameEntity.canStayAttached()) {
             return ActionResult.PASS;
         }
