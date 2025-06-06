@@ -1,0 +1,130 @@
+diff --git a/common/src/client/java/me/chrr/camerapture/render/PictureFrameEntityRenderer.java b/common/src/client/java/me/chrr/camerapture/render/PictureFrameEntityRenderer.java
+index 1ae1ea9f6a989b7fab89ca80a62a8bb364e14e4d..8403084749dc6c7ab88b63a143f64dcb15d4ccb7 100644
+--- a/common/src/client/java/me/chrr/camerapture/render/PictureFrameEntityRenderer.java
++++ b/common/src/client/java/me/chrr/camerapture/render/PictureFrameEntityRenderer.java
+@@ -22,50 +22,54 @@ import net.minecraft.util.math.ColorHelper;
+ import net.minecraft.util.math.Direction;
+ import net.minecraft.util.math.RotationAxis;
+ import net.minecraft.util.math.Vec3d;
+ import net.minecraft.util.shape.VoxelShape;
+ import net.minecraft.util.shape.VoxelShapes;
+ import org.jetbrains.annotations.Nullable;
+ import org.joml.Matrix4f;
+ import org.joml.Vector3d;
+ 
+ import java.util.UUID;
+ 
+ public class PictureFrameEntityRenderer extends EntityRenderer<PictureFrameEntity, PictureFrameEntityRenderer.RenderState> {
+     public static final double DISTANCE_FROM_WALL = 0.01;
+ 
+     public PictureFrameEntityRenderer(EntityRendererFactory.Context context) {
+         super(context);
+     }
+ 
+     @Override
+     public void render(RenderState state, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
+         matrices.push();
+ 
+         matrices.translate(this.getPositionOffset(state).negate());
+ 
+         matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180.0F - state.yaw));
++        if (state.facing.getAxis() == Direction.Axis.Y) {
++            float pitch = state.facing == Direction.UP ? -90.0F : 90.0F;
++            matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(pitch));
++        }
+         matrices.translate(0.5 - state.frameWidth / 2.0, -0.5 + state.frameHeight / 2.0, 0.0);
+ 
+         if (state.shouldRenderOutline) {
+             renderOutline(matrices, vertexConsumers, state.frameWidth, state.frameHeight);
+         }
+ 
+         matrices.translate(0.0, 0.0, (ResizableDecorationEntity.THICKNESS - DISTANCE_FROM_WALL) / 2.0);
+ 
+         if (state.pictureId == null) {
+             renderErrorText(matrices, vertexConsumers, light);
+         } else {
+             RemotePicture picture = ClientPictureStore.getInstance().getServerPicture(state.pictureId);
+             if (picture == null || picture.getStatus() == RemotePicture.Status.ERROR) {
+                 // Picture failed to load.
+                 renderErrorText(matrices, vertexConsumers, light);
+             } else if (picture.getStatus() == RemotePicture.Status.FETCHING) {
+                 // Picture is still fetching.
+                 renderFetching(matrices, vertexConsumers, light);
+             } else {
+                 // Picture should be rendered.
+                 matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(90f * state.rotation));
+                 renderPicture(matrices, vertexConsumers, picture, state, light);
+             }
+         }
+ 
+diff --git a/common/src/main/java/me/chrr/camerapture/entity/ResizableDecorationEntity.java b/common/src/main/java/me/chrr/camerapture/entity/ResizableDecorationEntity.java
+index b540b0c8c95a5be3171f0786e24cbd6a4e30432f..fc1366b1f2a757310b5d8b976af8e331e9812076 100644
+--- a/common/src/main/java/me/chrr/camerapture/entity/ResizableDecorationEntity.java
++++ b/common/src/main/java/me/chrr/camerapture/entity/ResizableDecorationEntity.java
+@@ -65,52 +65,60 @@ public abstract class ResizableDecorationEntity extends Entity {
+                 this.obstructionCheckCounter = 0;
+                 if (!this.canStayAttached() && !this.isRemoved()) {
+                     this.discard();
+                     this.onBreak(world, null);
+                 }
+             }
+         }
+     }
+ 
+     public BlockPos getAttachmentPos() {
+         return attachmentPos;
+     }
+ 
+     public void setAttachmentPos(BlockPos attachmentPos) {
+         this.attachmentPos = attachmentPos;
+         updateBoundingBox();
+     }
+ 
+     public Direction getFacing() {
+         return facing;
+     }
+ 
+     public void setFacing(Direction facing) {
+         this.facing = facing;
+ 
+-        this.setYaw((float) (this.facing.getHorizontalQuarterTurns() * 90));
++        if (this.facing.getAxis() == Direction.Axis.Y) {
++            // When facing up or down, orient the entity using pitch instead of yaw.
++            this.setPitch(this.facing == Direction.UP ? -90.0F : 90.0F);
++            this.setYaw(0.0F);
++        } else {
++            this.setPitch(0.0F);
++            this.setYaw((float) (this.facing.getHorizontalQuarterTurns() * 90));
++        }
+         this.lastYaw = this.getYaw();
++        this.lastPitch = this.getPitch();
+ 
+         updateBoundingBox();
+     }
+ 
+     public int getFrameWidth() {
+         return this.getDataTracker().get(FRAME_WIDTH);
+     }
+ 
+     public void setFrameWidth(int width) {
+         this.getDataTracker().set(FRAME_WIDTH, width);
+         updateBoundingBox();
+     }
+ 
+     public int getFrameHeight() {
+         return this.getDataTracker().get(FRAME_HEIGHT);
+     }
+ 
+     public void setFrameHeight(int height) {
+         this.getDataTracker().set(FRAME_HEIGHT, height);
+         updateBoundingBox();
+     }
+ 
+     protected void updateBoundingBox() {
+         if (this.facing == null) {
+             return;
+         }
+ 
+         this.setBoundingBox(VoxelShapes.fullCubeBoundingBox);
+     }
+ } 
