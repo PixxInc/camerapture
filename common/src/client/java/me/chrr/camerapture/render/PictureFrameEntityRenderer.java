@@ -33,6 +33,16 @@ import java.util.UUID;
 public class PictureFrameEntityRenderer extends EntityRenderer<PictureFrameEntity, PictureFrameEntityRenderer.RenderState> {
     public static final double DISTANCE_FROM_WALL = 0.01;
 
+    private static float yawFromFacing(Direction facing) {
+        return switch (facing) {
+            case SOUTH -> 180f;
+            case NORTH -> 0f;
+            case WEST  -> 90f;
+            case EAST  -> -90f;
+            default    -> 0f;              // UP/DOWN werden vorher behandelt
+        };
+    }
+
     public PictureFrameEntityRenderer(EntityRendererFactory.Context context) {
         super(context);
     }
@@ -48,7 +58,7 @@ public class PictureFrameEntityRenderer extends EntityRenderer<PictureFrameEntit
         } else if (state.facing == Direction.DOWN) {
             matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-90f));
         } else {
-            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180.0F - state.yaw));
+            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(yawFromFacing(state.facing)));
         }
 
         matrices.translate(0.5 - state.frameWidth / 2.0, -0.5 + state.frameHeight / 2.0, 0.0);
@@ -156,8 +166,7 @@ public class PictureFrameEntityRenderer extends EntityRenderer<PictureFrameEntit
 
     @Override
     public Vec3d getPositionOffset(RenderState state) {
-        Vector3d extra = state.facing.getRotationQuaternion().transform(new Vector3d(((float) state.frameWidth - 1f) / 2f, 0, -state.frameHeight + 2));
-        return new Vec3d(state.facing.getOffsetX() * 0.3f + extra.x, -0.25f + extra.y, state.facing.getOffsetZ() * 0.3f + extra.z);
+        return new Vec3d(0, 0, 0);
     }
 
     @Nullable
