@@ -118,10 +118,10 @@ index 003065d38780f2470a16754979b61f7576298d9a..dd9799df3f323963a5311dd809107e08
          if (itemStack.isEmpty()) {
              Camerapture.LOGGER.warn("unable to load item for picture frame");
 diff --git a/common/src/main/java/me/chrr/camerapture/entity/ResizableDecorationEntity.java b/common/src/main/java/me/chrr/camerapture/entity/ResizableDecorationEntity.java
-index b540b0c8c95a5be3171f0786e24cbd6a4e30432f..9e59f57e6d9934c9153e7691c4b6d8d5d5e61330 100644
+index b540b0c8c95a5be3171f0786e24cbd6a4e30432f..6aa16add8a3f3f2af306e078c8b6dabd79ea67e6 100644
 --- a/common/src/main/java/me/chrr/camerapture/entity/ResizableDecorationEntity.java
 +++ b/common/src/main/java/me/chrr/camerapture/entity/ResizableDecorationEntity.java
-@@ -65,52 +65,60 @@ public abstract class ResizableDecorationEntity extends Entity {
+@@ -65,51 +65,58 @@ public abstract class ResizableDecorationEntity extends Entity {
                  this.obstructionCheckCounter = 0;
                  if (!this.canStayAttached() && !this.isRemoved()) {
                      this.discard();
@@ -149,15 +149,14 @@ index b540b0c8c95a5be3171f0786e24cbd6a4e30432f..9e59f57e6d9934c9153e7691c4b6d8d5
  
 -        this.setYaw((float) (this.facing.getHorizontalQuarterTurns() * 90));
 +        if (this.facing.getAxis() == Direction.Axis.Y) {
-+            // When facing up or down, orient the entity using pitch instead of yaw.
++            // Orient using pitch when attached to the floor or ceiling
 +            this.setPitch(this.facing == Direction.UP ? -90.0F : 90.0F);
-+            this.setYaw(0.0F);
 +        } else {
 +            this.setPitch(0.0F);
 +            this.setYaw((float) (this.facing.getHorizontalQuarterTurns() * 90));
 +        }
++
          this.lastYaw = this.getYaw();
-+        this.lastPitch = this.getPitch();
  
          updateBoundingBox();
      }
@@ -182,8 +181,7 @@ index b540b0c8c95a5be3171f0786e24cbd6a4e30432f..9e59f57e6d9934c9153e7691c4b6d8d5
  
      protected void updateBoundingBox() {
          if (this.facing == null) {
-             return;
-@@ -277,49 +285,53 @@ public abstract class ResizableDecorationEntity extends Entity {
+@@ -277,49 +284,53 @@ public abstract class ResizableDecorationEntity extends Entity {
  
      @Override
      public void writeCustomDataToNbt(NbtCompound nbt) {
