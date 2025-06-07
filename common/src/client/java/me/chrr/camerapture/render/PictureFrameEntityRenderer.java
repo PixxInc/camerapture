@@ -39,7 +39,7 @@ public class PictureFrameEntityRenderer extends EntityRenderer<PictureFrameEntit
             case NORTH -> 0f;
             case WEST  -> 90f;
             case EAST  -> -90f;
-            default    -> 0f;              // UP/DOWN werden vorher behandelt
+            default    -> 0f;
         };
     }
 
