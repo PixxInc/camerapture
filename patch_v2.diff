@@ -1,0 +1,242 @@
+diff --git a/common/src/client/java/me/chrr/camerapture/render/PictureFrameEntityRenderer.java b/common/src/client/java/me/chrr/camerapture/render/PictureFrameEntityRenderer.java
+index 1ae1ea9f6a989b7fab89ca80a62a8bb364e14e4d..8403084749dc6c7ab88b63a143f64dcb15d4ccb7 100644
+--- a/common/src/client/java/me/chrr/camerapture/render/PictureFrameEntityRenderer.java
++++ b/common/src/client/java/me/chrr/camerapture/render/PictureFrameEntityRenderer.java
+@@ -22,50 +22,54 @@ import net.minecraft.util.math.ColorHelper;
+ import net.minecraft.util.math.Direction;
+ import net.minecraft.util.math.RotationAxis;
+ import net.minecraft.util.math.Vec3d;
+ import net.minecraft.util.shape.VoxelShape;
+ import net.minecraft.util.shape.VoxelShapes;
+ import org.jetbrains.annotations.Nullable;
+ import org.joml.Matrix4f;
+ import org.joml.Vector3d;
+ 
+ import java.util.UUID;
+ 
+ public class PictureFrameEntityRenderer extends EntityRenderer<PictureFrameEntity, PictureFrameEntityRenderer.RenderState> {
+     public static final double DISTANCE_FROM_WALL = 0.01;
+ 
+     public PictureFrameEntityRenderer(EntityRendererFactory.Context context) {
+         super(context);
+     }
+ 
+     @Override
+     public void render(RenderState state, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
+         matrices.push();
+ 
+         matrices.translate(this.getPositionOffset(state).negate());
+ 
+         matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180.0F - state.yaw));
++        if (state.facing.getAxis() == Direction.Axis.Y) {
++            float pitch = state.facing == Direction.UP ? -90.0F : 90.0F;
++            matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(pitch));
++        }
+         matrices.translate(0.5 - state.frameWidth / 2.0, -0.5 + state.frameHeight / 2.0, 0.0);
+ 
+         if (state.shouldRenderOutline) {
+             renderOutline(matrices, vertexConsumers, state.frameWidth, state.frameHeight);
+         }
+ 
+         matrices.translate(0.0, 0.0, (ResizableDecorationEntity.THICKNESS - DISTANCE_FROM_WALL) / 2.0);
+ 
+         if (state.pictureId == null) {
+             renderErrorText(matrices, vertexConsumers, light);
+         } else {
+             RemotePicture picture = ClientPictureStore.getInstance().getServerPicture(state.pictureId);
+             if (picture == null || picture.getStatus() == RemotePicture.Status.ERROR) {
+                 // Picture failed to load.
+                 renderErrorText(matrices, vertexConsumers, light);
+             } else if (picture.getStatus() == RemotePicture.Status.FETCHING) {
+                 // Picture is still fetching.
+                 renderFetching(matrices, vertexConsumers, light);
+             } else {
+                 // Picture should be rendered.
+                 matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(90f * state.rotation));
+                 renderPicture(matrices, vertexConsumers, picture, state, light);
+             }
+         }
+ 
+diff --git a/common/src/main/java/me/chrr/camerapture/entity/PictureFrameEntity.java b/common/src/main/java/me/chrr/camerapture/entity/PictureFrameEntity.java
+index 003065d38780f2470a16754979b61f7576298d9a..dd9799df3f323963a5311dd809107e08b58d4f39 100644
+--- a/common/src/main/java/me/chrr/camerapture/entity/PictureFrameEntity.java
++++ b/common/src/main/java/me/chrr/camerapture/entity/PictureFrameEntity.java
+@@ -212,51 +212,55 @@ public class PictureFrameEntity extends ResizableDecorationEntity implements Nam
+             setFrameWidth(width + n);
+             return true;
+         } else {
+             return false;
+         }
+     }
+ 
+     private boolean tryAddHeight(int n) {
+         int height = getFrameHeight();
+         if (height >= 1 - n && height <= 16 - n) {
+             setFrameHeight(height + n);
+             return true;
+         } else {
+             return false;
+         }
+     }
+ 
+     @Override
+     public Packet<ClientPlayPacketListener> createSpawnPacket(EntityTrackerEntry entityTrackerEntry) {
+         return new EntitySpawnS2CPacket(this, this.getFacing().getIndex(), this.getBlockPos());
+     }
+ 
+     @Override
+     public void onSpawnPacket(EntitySpawnS2CPacket packet) {
+         super.onSpawnPacket(packet);
++        float yaw = this.getYaw();
++        float pitch = this.getPitch();
+         this.setFacing(Direction.byIndex(packet.getEntityData()));
++        this.setYaw(yaw);
++        this.setPitch(pitch);
+     }
+ 
+     @Override
+     public void writeCustomDataToNbt(NbtCompound nbt) {
+         super.writeCustomDataToNbt(nbt);
+ 
+         ItemStack itemStack = this.getItemStack();
+         if (!itemStack.isEmpty()) {
+             nbt.put("Item", itemStack.toNbt(getRegistryManager()));
+         }
+ 
+         nbt.putBoolean("PictureGlowing", this.isPictureGlowing());
+         nbt.putBoolean("Fixed", this.isFixed());
+         nbt.putInt("PictureRotation", this.getRotation());
+     }
+ 
+     @Override
+     public void readCustomDataFromNbt(NbtCompound nbt) {
+         super.readCustomDataFromNbt(nbt);
+ 
+         RegistryOps<NbtElement> registryOps = this.getRegistryManager().getOps(NbtOps.INSTANCE);
+ 
+         Optional<ItemStack> itemStack = nbt.get("Item", ItemStack.CODEC, registryOps);
+         if (itemStack.isEmpty()) {
+             Camerapture.LOGGER.warn("unable to load item for picture frame");
+diff --git a/common/src/main/java/me/chrr/camerapture/entity/ResizableDecorationEntity.java b/common/src/main/java/me/chrr/camerapture/entity/ResizableDecorationEntity.java
+index b540b0c8c95a5be3171f0786e24cbd6a4e30432f..9e59f57e6d9934c9153e7691c4b6d8d5d5e61330 100644
+--- a/common/src/main/java/me/chrr/camerapture/entity/ResizableDecorationEntity.java
++++ b/common/src/main/java/me/chrr/camerapture/entity/ResizableDecorationEntity.java
+@@ -65,52 +65,60 @@ public abstract class ResizableDecorationEntity extends Entity {
+                 this.obstructionCheckCounter = 0;
+                 if (!this.canStayAttached() && !this.isRemoved()) {
+                     this.discard();
+                     this.onBreak(world, null);
+                 }
+             }
+         }
+     }
+ 
+     public BlockPos getAttachmentPos() {
+         return attachmentPos;
+     }
+ 
+     public void setAttachmentPos(BlockPos attachmentPos) {
+         this.attachmentPos = attachmentPos;
+         updateBoundingBox();
+     }
+ 
+     public Direction getFacing() {
+         return facing;
+     }
+ 
+     public void setFacing(Direction facing) {
+         this.facing = facing;
+ 
+-        this.setYaw((float) (this.facing.getHorizontalQuarterTurns() * 90));
++        if (this.facing.getAxis() == Direction.Axis.Y) {
++            // When facing up or down, orient the entity using pitch instead of yaw.
++            this.setPitch(this.facing == Direction.UP ? -90.0F : 90.0F);
++            this.setYaw(0.0F);
++        } else {
++            this.setPitch(0.0F);
++            this.setYaw((float) (this.facing.getHorizontalQuarterTurns() * 90));
++        }
+         this.lastYaw = this.getYaw();
++        this.lastPitch = this.getPitch();
+ 
+         updateBoundingBox();
+     }
+ 
+     public int getFrameWidth() {
+         return this.getDataTracker().get(FRAME_WIDTH);
+     }
+ 
+     public void setFrameWidth(int width) {
+         this.getDataTracker().set(FRAME_WIDTH, width);
+         updateBoundingBox();
+     }
+ 
+     public int getFrameHeight() {
+         return this.getDataTracker().get(FRAME_HEIGHT);
+     }
+ 
+     public void setFrameHeight(int height) {
+         this.getDataTracker().set(FRAME_HEIGHT, height);
+         updateBoundingBox();
+     }
+ 
+     protected void updateBoundingBox() {
+         if (this.facing == null) {
+             return;
+@@ -277,49 +285,53 @@ public abstract class ResizableDecorationEntity extends Entity {
+ 
+     @Override
+     public void writeCustomDataToNbt(NbtCompound nbt) {
+         nbt.putInt("TileX", attachmentPos.getX());
+         nbt.putInt("TileY", attachmentPos.getY());
+         nbt.putInt("TileZ", attachmentPos.getZ());
+ 
+         nbt.putByte("Facing", (byte) this.getFacing().getIndex());
+         nbt.putInt("Width", this.getFrameWidth());
+         nbt.putInt("Height", this.getFrameHeight());
+     }
+ 
+     @Override
+     public void readCustomDataFromNbt(NbtCompound nbt) {
+         // FIXME: probably want to use codecs here at some point, but it has to be at a version boundary.
+         BlockPos blockPos = new BlockPos(
+                 nbt.getInt("TileX").orElse(0),
+                 nbt.getInt("TileY").orElse(0),
+                 nbt.getInt("TileZ").orElse(0));
+         if (!blockPos.isWithinDistance(this.getBlockPos(), 16.0)) {
+             Camerapture.LOGGER.error("hanging entity at invalid position: {}", blockPos);
+         } else {
+             this.attachmentPos = blockPos;
+         }
+ 
++        float yaw = this.getYaw();
++        float pitch = this.getPitch();
+         this.setFacing(Direction.byIndex(nbt.getByte("Facing").orElse((byte) 0)));
++        this.setYaw(yaw);
++        this.setPitch(pitch);
+         this.setFrameWidth(nbt.getInt("Width").orElse(1));
+         this.setFrameHeight(nbt.getInt("Height").orElse(1));
+ 
+         updateBoundingBox();
+     }
+ 
+     @Override
+     public float applyMirror(BlockMirror mirror) {
+         return this.applyRotation(mirror.getRotation(this.getFacing()));
+     }
+ 
+     @Override
+     public void onStruckByLightning(ServerWorld world, LightningEntity lightning) {
+     }
+ 
+     @Override
+     public void calculateDimensions() {
+     }
+ 
+     public abstract void onPlace();
+ 
+     public abstract void onBreak(ServerWorld world, @Nullable Entity entity);
+ }
+\ No newline at end of file
+ 
+EOF 
