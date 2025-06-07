@@ -43,7 +43,14 @@ public class PictureFrameEntityRenderer extends EntityRenderer<PictureFrameEntit
 
         matrices.translate(this.getPositionOffset(state).negate());
 
-        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180.0F - state.yaw));
+        if (state.facing == Direction.UP) {
+            matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(90f));
+        } else if (state.facing == Direction.DOWN) {
+            matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-90f));
+        } else {
+            matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(180.0F - state.yaw));
+        }
+
         matrices.translate(0.5 - state.frameWidth / 2.0, -0.5 + state.frameHeight / 2.0, 0.0);
 
         if (state.shouldRenderOutline) {
