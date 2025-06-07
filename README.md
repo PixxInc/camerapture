@@ -1,41 +1,33 @@
-# Camerapture
+# Camerapture Plus
 
-> Fabric mod with cameras that can take pictures!
+> Personal fork of [Camerapture](https://github.com/chrrs/camerapture) mod, extended and improved for personal use.
 
-![Version](https://img.shields.io/github/v/release/chrrs/camerapture?include_prereleases&style=flat-square)
-![Build status](https://img.shields.io/github/actions/workflow/status/chrrs/camerapture/build.yml?style=flat-square)
-[![Modrinth](https://img.shields.io/modrinth/dt/9dzLWnmZ?style=flat-square&logo=modrinth)](https://modrinth.com/mod/camerapture)
-[![CurseForge](https://img.shields.io/curseforge/dt/1051342?style=flat-square&logo=curseforge)](https://curseforge.com/minecraft/mc-mods/camerapture)
+---
 
-Read more about it on [Modrinth](https://modrinth.com/mod/camerapture)
-or [CurseForge](https://curseforge.com/minecraft/mc-mods/camerapture).
+This version was created for me and my brother, as the original mod was missing a few features we wanted (such as placing images on floors and ceilings).  
+I'm more of a designer than a programmer and still learning so expect very bad code :P.
 
-## Project Structure
+---
 
-Camerapture supports multiple Minecraft versions using branches. See the list of branches for versions Camerapture
-supports. Any version prefixed with `old/` is not supported anymore.
+## 🚀 Feature Progress
 
-### Update checklist
+| Feature                                      | Status      |
+|----------------------------------------------|-------------|
+| Place images on ceiling (facing downward)    | ✅ Done      |
+| Place images on floor (facing upward)        | ✅ Done      |
+| Image crop methods (fit, contain, etc.)      | ⬜️ Planned   |
+| Support for different camera aspect ratios   | ⬜️ Planned   |
+| Image storage & retrieval in-game            | ⬜️ Planned   |
+| Easy image export to file                    | ⬜️ Planned   |
+| Additional features / improvements           | ⬜️ Planned   |
 
-- Create a new branch based on the latest branch.
-- Update minecraft version.
-    - Change in `gradle.properties` and update all dependencies.
-    - **Optional:** Deprecate older version(s) by adding `old/` to the branch name.
-- Fix all conflicts and test on all loaders.
-- Release new version as described below.
+---
 
-### Release checklist
+## ⚠️ Notes
 
-- Update the version number.
-    - Change in `gradle.properties`.
-    - Add an entry in `CHANGELOG.md`.
-- Commit and push a new tag. (example: `v1.2.3`)
-    - Tag name is the version number prefixed by `v`.
-- Cherry pick the changes onto the other branches and fix all conflicts.
-- Manually trigger the Publish workflow on GitHub for every version.
+- This mod may still contain bugs.
+- Full credit goes to the original [Camerapture](https://github.com/chrrs/camerapture) repository ofc!
 
-## Credits
+---
 
-- henkelmax for making the [Camera Mod for Forge](https://modrinth.com/mod/camera-mod) that's used on the QSMP, for
-  being the main inspiration of this mod.
-- All the great people on our origins server for being amazing and patient with me <3
+_This fork is built on top of the [original Camerapture mod](https://github.com/chrrs/camerapture)._
