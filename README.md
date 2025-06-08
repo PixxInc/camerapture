@@ -26,10 +26,10 @@ I'm more of a designer than a programmer and still learning so expect very bad c
 ## 📸 Feature Previews
 
 ### ✅ Place images on floor (facing upward)
-![Place on Floor](images/example_ceiling.png)
+![Place on Floor](images/exmaple_floor.png)
 
 ### ✅ Place images on ceiling (facing downward)
-![Place on Ceiling](images/exmaple_floor.png)
+![Place on Ceiling](images/example_ceiling.png)
 
 ---
 
