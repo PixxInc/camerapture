@@ -11,15 +11,25 @@ I'm more of a designer than a programmer and still learning so expect very bad c
 
 ## 🚀 Feature Progress
 
-| Feature                                      | Status      |
-|----------------------------------------------|-------------|
-| Place images on ceiling (facing downward)    | ✅ Done      |
-| Place images on floor (facing upward)        | ✅ Done      |
-| Image crop methods (fit, contain, etc.)      | ⬜️ Planned   |
-| Support for different camera aspect ratios   | ⬜️ Planned   |
-| Image storage & retrieval in-game            | ⬜️ Planned   |
-| Easy image export to file                    | ⬜️ Planned   |
-| Additional features / improvements           | ⬜️ Planned   |
+|Feature| Status|
+|-|-|
+|Place images on floor (facing upward)| ✅ Done|
+|Place images on ceiling (facing downward)| ✅ Done|
+|Image crop methods (fit, contain, etc.)| ⬜️ Planned|
+|Support for different camera aspect ratios| ⬜️ Planned|
+|Image storage & retrieval in-game| ⬜️ Planned|
+|Easy image export to file| ⬜️ Planned|
+|Additional features / improvements| ⬜️ Planned|
+
+---
+
+## 📸 Feature Previews
+
+### ✅ Place images on floor (facing upward)
+![Place on Floor](images/example_ceiling.png)
+
+### ✅ Place images on ceiling (facing downward)
+![Place on Ceiling](images/exmaple_floor.png)
 
 ---
 
